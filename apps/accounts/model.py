@@ -13,11 +13,16 @@ class Users:
         self.database["users"].append({"email": email, "password": hashed_password})
         return True
 
-    def update(self, email, password):
-        pass
-
-    def reset_password(self, email):
-        pass
+    def update(self, email: str, new_values: Dict) -> bool:
+        for user in self.database["users"]:
+            if user["email"] == email:
+                for key, value in new_values.items():
+                    if key == "password":
+                        user[key] = Password.hash_password(value)
+                        continue
+                    user[key] = value
+                return True
+        return False
 
     def get_user(self, email: str) -> Optional[Dict]:
         for user in self.database["users"]:

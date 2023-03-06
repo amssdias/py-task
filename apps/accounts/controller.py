@@ -23,7 +23,10 @@ class AccountsController:
         if password_is_valid:
             controller.user_logged = True
             self.view.info("User logged successfully.")
-        return True
+            return True
+        
+        self.view.error("Password incorrect.")
+        return False
 
     def register(self, _) -> False:
         email, password, password_ = self.view.ask_register()
@@ -42,6 +45,30 @@ class AccountsController:
     def logout(self, controller):
         controller.user_logged = False
         self.view.info("User logged out.")
+
+    def reset_password(self, _) -> bool:
+        email = self.view.ask_user_email()
+
+        if not self.model.get_user(email):
+            self.view.error("Sorry, user does not exist. Register first.")
+            return False
+
+        # TODO:
+        # - Create a pin
+        # - Send an email with that pin
+        # - Ask user to enter that pin here so we confirm it's him
+        # - Ask him to prompt his new password and update
+
+        password = self.view.ask_user_password(prompt="Enter your new password: ")
+        password_ = self.view.ask_user_password(prompt="Enter your new password again: ")
+
+        if not self.validate_password(password, password_):
+            self.view.error("Sorry, passwords didn't match")
+            return False
+        
+        self.model.update(email=email, new_values={"password": password})
+        self.view.info("Password updated.")
+
 
     def validate_email(self, email: str) -> bool:
         return True
