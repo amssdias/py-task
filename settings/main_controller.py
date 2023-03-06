@@ -13,14 +13,15 @@ class MainController:
 
     @property
     def user_logged(self):
-        if self._user_logged:
-            return self._user_logged
+        return self._user_logged
 
     @user_logged.setter
     def user_logged(self, value):
         self._user_logged = value
         if value:
             self.menu_actions = TODO_MENU_ACTIONS
+        else:
+            self.menu_actions = ACCOUNTS_MENU_ACTIONS
 
     def start_app(self):
         print("Starting app...")

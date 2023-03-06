@@ -39,8 +39,9 @@ class AccountsController:
         self.view.info("User registered successfully")
         return True
 
-    def logout(self, email):
-        pass
+    def logout(self, controller):
+        controller.user_logged = False
+        self.view.info("User logged out.")
 
     def validate_email(self, email: str) -> bool:
         return True

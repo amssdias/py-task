@@ -1,4 +1,8 @@
+from apps.accounts.controller import AccountsController
 from .controller import TodoController
+
+
+accounts_controller = AccountsController()
 
 
 TODO_MENU = """
@@ -15,6 +19,6 @@ TODO_MENU_ACTIONS = {
     2: "Create new task",
     3: "Update task",
     4: "Delete Task",
-    5: "Logout",
+    5: accounts_controller.logout,
     0: "Exit",
 }
