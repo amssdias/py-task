@@ -6,7 +6,6 @@ from apps.accounts.view import AccountsView
 class AccountsController:
 
     def __init__(self):
-        self.user = None
         self.model = Users()
         self.view = AccountsView()
 
@@ -68,7 +67,6 @@ class AccountsController:
         
         self.model.update(email=email, new_values={"password": password})
         self.view.info("Password updated.")
-
 
     def validate_email(self, email: str) -> bool:
         return True
