@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 from colorama import Fore
 
@@ -39,16 +39,16 @@ class TestAccountsView(unittest.TestCase):
     def test_ask_login_result_value(self):
         name = "testing_name"
         password = "12345678"
-        self.view.ask_user_email = MagicMock(return_value=name)
-        self.view.ask_user_password = MagicMock(return_value=password)
+        self.view.ask_user_email = Mock(return_value=name)
+        self.view.ask_user_password = Mock(return_value=password)
         result = self.view.ask_login()
 
         self.assertEqual((name, password), result)
         self.assertIsInstance(result, tuple)
 
     def test_ask_login_methods_called(self):
-        self.view.ask_user_email = MagicMock()
-        self.view.ask_user_password = MagicMock()
+        self.view.ask_user_email = Mock()
+        self.view.ask_user_password = Mock()
         self.view.ask_login()
 
         self.view.ask_user_email.assert_called_once()
@@ -57,16 +57,16 @@ class TestAccountsView(unittest.TestCase):
     def test_ask_register_return_value(self):
         name = "testing_name"
         password = "12345678"
-        self.view.ask_user_email = MagicMock(return_value=name)
-        self.view.ask_user_password = MagicMock(return_value=password)
+        self.view.ask_user_email = Mock(return_value=name)
+        self.view.ask_user_password = Mock(return_value=password)
         result = self.view.ask_register()
 
         self.assertEqual((name, password, password), result)
         self.assertIsInstance(result, tuple)
 
     def test_ask_register_methods_called(self):
-        self.view.ask_user_email = MagicMock()
-        self.view.ask_user_password = MagicMock()
+        self.view.ask_user_email = Mock()
+        self.view.ask_user_password = Mock()
         self.view.ask_register()
 
         self.view.ask_user_email.assert_called_once()
