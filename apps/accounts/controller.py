@@ -63,11 +63,11 @@ class AccountsController:
         password_ = self.view.ask_user_password(prompt="Enter your new password again: ")
 
         if not self.validate_password(password, password_):
-            self.view.error("Sorry, passwords didn't match")
             return False
         
         self.model.update(email=email, new_values={"password": password})
         self.view.info("Password updated.")
+        return True
 
     def validate_register_inputs(self, email: str, password: str, password_: str) -> Optional[Dict]:
         email = self.validate_email(email)

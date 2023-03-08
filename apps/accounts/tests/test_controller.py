@@ -179,8 +179,88 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.info.assert_called_once()
         self.controller.view.info.assert_called_once_with("User logged out.")
 
-    def _test_reset_password(self):
-        pass
+    def test_reset_password(self):
+        self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
+        self.controller.model.get_user = Mock(return_value=True)
+        self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345678"])
+        self.controller.validate_password = Mock(return_value=True)
+        self.controller.view.info = Mock()
+
+        c = Mock()
+        result = self.controller.reset_password(c)
+
+        self.assertTrue(result)
+
+    def test_reset_password_unexisted_user(self):
+        self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
+        self.controller.model.get_user = Mock(return_value=False)
+        self.controller.view.error = Mock()
+
+        c = Mock()
+        result = self.controller.reset_password(c)
+
+        self.assertFalse(result)
+        self.controller.model.get_user.assert_called_once()
+        self.controller.model.get_user.assert_called_once_with("test@testing.com")
+        self.controller.view.error.assert_called_once()
+        self.controller.view.error.assert_called_once_with("Sorry, user does not exist. Register first.")
+
+    def test_reset_password_mismatch_passwords(self):
+        self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
+        self.controller.model.get_user = Mock(return_value=True)
+        self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345679"])
+        self.controller.view.error = Mock()
+
+        c = Mock()
+        result = self.controller.reset_password(c)
+
+        self.assertFalse(result)
+        self.controller.view.ask_user_password.assert_called()
+        self.controller.view.error.assert_called_once()
+        self.controller.view.error.assert_called_once_with("Passwords mismatch!")
+
+    def test_reset_password_short_length(self):
+        self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
+        self.controller.model.get_user = Mock(return_value=True)
+        self.controller.view.ask_user_password = Mock(side_effect=["1234567", "1234567"])
+        self.controller.view.error = Mock()
+
+        c = Mock()
+        result = self.controller.reset_password(c)
+
+        self.assertFalse(result)
+        self.controller.view.ask_user_password.assert_called()
+        self.controller.view.error.assert_called_once()
+        self.controller.view.error.assert_called_once_with("Password too short.")
+
+    def test_reset_password_validate_password_called(self):
+        self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
+        self.controller.model.get_user = Mock(return_value=True)
+        self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345678"])
+        self.controller.validate_password = Mock(return_value=False)
+        self.controller.view.error = Mock()
+
+        c = Mock()
+        result = self.controller.reset_password(c)
+
+        self.assertFalse(result)
+        self.controller.validate_password.assert_called_once()
+        self.controller.validate_password.assert_called_once_with("12345678", "12345678")
+
+    def test_reset_password_database_updated(self):
+        self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
+        self.controller.model.get_user = Mock(return_value=True)
+        self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345678"])
+        self.controller.validate_password = Mock(return_value=True)
+        self.controller.model.update = Mock()
+        self.controller.view.info = Mock()
+
+        c = Mock()
+        self.controller.reset_password(c)
+
+        self.controller.model.update.assert_called_once()
+        self.controller.model.update.assert_called_once_with(email="test@testing.com", new_values={"password": "12345678"})
+        self.controller.view.info.assert_called_once()
 
     def _test_validate_email(self):
         pass
