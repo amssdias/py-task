@@ -82,7 +82,7 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.error.assert_called_once_with("Password incorrect.")
 
     def test_register_successful(self):
-        register_info = ("testing", "12345678", "12345678")
+        register_info = ("test@testing.com", "12345678", "12345678")
         self.controller.view.ask_register = Mock(return_value=register_info)
         self.controller.model.create_user = Mock()
         self.controller.view.info = Mock()
@@ -92,9 +92,77 @@ class TestAccountsController(unittest.TestCase):
 
         self.assertTrue(result)
 
+    def test_register_ask_register_called(self):
+    
+        register_info = ("test@testing.com", "12345678", "12345678")
+        self.controller.view.ask_register = Mock(return_value=register_info)
+        self.controller.model.create_user = Mock()
+        self.controller.view.info = Mock()
+
+        mock = Mock()
+        self.controller.register(mock)
+
         self.controller.view.ask_register.assert_called_once()
+
+    def test_register_create_user_called(self):
+        register_info = ("test@testing.com", "12345678", "12345678")
+        self.controller.view.ask_register = Mock(return_value=register_info)
+        self.controller.model.create_user = Mock()
+        self.controller.view.info = Mock()
+
+        mock = Mock()
+        self.controller.register(mock)
+
         self.controller.model.create_user.assert_called_once()
+        self.controller.model.create_user.assert_called_once_with("test@testing.com", "12345678")
+
+    def test_register_info_called(self):
+        register_info = ("test@testing.com", "12345678", "12345678")
+        self.controller.view.ask_register = Mock(return_value=register_info)
+        self.controller.model.create_user = Mock()
+        self.controller.view.info = Mock()
+
+        mock = Mock()
+        self.controller.register(mock)
+
         self.controller.view.info.assert_called_once()
+        self.controller.view.info.assert_called_once_with("User registered successfully")
+
+    def test_register_invalid_email(self):
+        register_info = ("test", "12345678", "12345678")
+        self.controller.view.ask_register = Mock(return_value=register_info)
+        self.controller.view.error = Mock()
+        mock = Mock()
+        result = self.controller.register(mock)
+
+        self.assertFalse(result)
+
+        self.controller.view.error.assert_called_once()
+        self.controller.view.error.assert_called_once_with("Email not valid.")
+
+    def test_register_invalid_password_length(self):
+        register_info = ("test@testing.com", "1234567", "1234567")
+        self.controller.view.ask_register = Mock(return_value=register_info)
+        self.controller.view.error = Mock()
+        mock = Mock()
+        result = self.controller.register(mock)
+
+        self.assertFalse(result)
+
+        self.controller.view.error.assert_called_once()
+        self.controller.view.error.assert_called_once_with("Password too short.")
+
+    def test_register_invalid_password_mismatch(self):
+        register_info = ("test@testing.com", "12345678", "12345679")
+        self.controller.view.ask_register = Mock(return_value=register_info)
+        self.controller.view.error = Mock()
+        mock = Mock()
+        result = self.controller.register(mock)
+
+        self.assertFalse(result)
+
+        self.controller.view.error.assert_called_once()
+        self.controller.view.error.assert_called_once_with("Passwords mismatch!")
 
     def _test_logout(self):
         pass

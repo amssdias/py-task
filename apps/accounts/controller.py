@@ -1,3 +1,6 @@
+import re
+from typing import Optional, Dict
+
 from apps.accounts.model import Users
 from apps.accounts.utils.password import Password
 from apps.accounts.view import AccountsView
@@ -27,15 +30,13 @@ class AccountsController:
         self.view.error("Password incorrect.")
         return False
 
-    def register(self, _) -> False:
+    def register(self, _) -> bool:
         email, password, password_ = self.view.ask_register()
 
-        if not self.validate_email(email):
-            self.view.error("Email not valid.")
-            return False 
-        elif not self.validate_password(password, password_):
-            self.view.error("Sorry, passwords didn't match.")
-            return False 
+        user_cleaned_data = self.validate_register_inputs(email, password, password_)
+        
+        if not user_cleaned_data:
+            return False
 
         self.model.create_user(email, password)
         self.view.info("User registered successfully")
@@ -68,8 +69,33 @@ class AccountsController:
         self.model.update(email=email, new_values={"password": password})
         self.view.info("Password updated.")
 
-    def validate_email(self, email: str) -> bool:
-        return True
+    def validate_register_inputs(self, email: str, password: str, password_: str) -> Optional[Dict]:
+        email = self.validate_email(email)
+        password = self.validate_password(password, password_)
 
-    def validate_password(self, password: str, password_: str) -> bool:
-        return True
+        if not email or not password:
+            return None
+        
+        return {"email": email, "password": password}
+
+
+    def validate_email(self, email: str) -> str:
+        if not isinstance(email, str):
+            raise TypeError(f"Input {email} must be a str.")
+
+        email = email.strip()
+        email_regex = re.compile(r"@[a-zA-Z-\d]+\.(com|net|es|org)$")
+        if not email_regex.search(email) or self.model.get_user(email):
+            self.view.error("Email not valid.")
+            return None
+
+        return email
+
+    def validate_password(self, password: str, password_: str) -> str:
+        if password != password_ or len(password) < 8:
+            self.view.error(
+                "Password too short." if len(password) < 8 else "Passwords mismatch!" 
+            )
+            return None
+
+        return password
