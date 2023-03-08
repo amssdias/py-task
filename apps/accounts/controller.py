@@ -42,7 +42,7 @@ class AccountsController:
         self.view.info("User registered successfully")
         return True
 
-    def logout(self, controller):
+    def logout(self, controller) -> None:
         controller.user_logged = False
         self.view.info("User logged out.")
 

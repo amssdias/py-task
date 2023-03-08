@@ -164,8 +164,20 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.error.assert_called_once()
         self.controller.view.error.assert_called_once_with("Passwords mismatch!")
 
-    def _test_logout(self):
-        pass
+    def test_logout(self):
+        self.controller.view.info = Mock()
+        c = Mock()
+        self.controller.logout(c)
+
+        self.assertEqual(False, c.user_logged)
+
+    def test_logout_view_info_called(self):
+        self.controller.view.info = Mock()
+        c = Mock()
+        self.controller.logout(c)
+
+        self.controller.view.info.assert_called_once()
+        self.controller.view.info.assert_called_once_with("User logged out.")
 
     def _test_reset_password(self):
         pass
