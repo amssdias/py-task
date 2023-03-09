@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from apps.accounts.controller import AccountsController
 from apps.accounts.model import Users
@@ -10,6 +10,7 @@ class TestAccountsController(unittest.TestCase):
 
     def setUp(self) -> None:
         self.controller = AccountsController()
+        self.controller.model.database = MagicMock()
         return super().setUp()
     
     def test_initial_variables(self):
@@ -261,6 +262,64 @@ class TestAccountsController(unittest.TestCase):
         self.controller.model.update.assert_called_once()
         self.controller.model.update.assert_called_once_with(email="test@testing.com", new_values={"password": "12345678"})
         self.controller.view.info.assert_called_once()
+
+    def test_validate_register_inputs(self):
+        result = self.controller.validate_register_inputs(
+            email="test@testing.com",
+            password="12345678",
+            password_="12345678"
+        )
+
+        self.assertTrue(result)
+
+    def test_validate_register_inputs_invalid_email(self):
+        self.controller.view.error = Mock()
+
+        result = self.controller.validate_register_inputs(
+            email="test@",
+            password="12345678",
+            password_="12345678"
+        )
+
+        self.assertFalse(result)
+        self.controller.view.error.assert_called_once()
+
+    def test_validate_register_inputs_invalid_password_length(self):
+        self.controller.view.error = Mock()
+
+        result = self.controller.validate_register_inputs(
+            email="test@testing.com",
+            password="1234567",
+            password_="1234567"
+        )
+
+        self.assertFalse(result)
+        self.controller.view.error.assert_called_once()
+
+    def test_validate_register_inputs_invalid_password_mismatch(self):
+        self.controller.view.error = Mock()
+
+        result = self.controller.validate_register_inputs(
+            email="test@testing.com",
+            password="12345678",
+            password_="12345679"
+        )
+
+        self.assertFalse(result)
+        self.controller.view.error.assert_called_once()
+
+    def test_validate_register_inputs_validations_called(self):
+        self.controller.validate_email = Mock(return_value=True)
+        self.controller.validate_password = Mock(return_value=True)
+
+        self.controller.validate_register_inputs(
+            email="test@testing.com",
+            password="12345678",
+            password_="12345679"
+        )
+
+        self.controller.validate_email.assert_called_once()
+        self.controller.validate_password.assert_called_once()
 
     def _test_validate_email(self):
         pass

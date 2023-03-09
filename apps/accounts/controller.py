@@ -78,7 +78,6 @@ class AccountsController:
         
         return {"email": email, "password": password}
 
-
     def validate_email(self, email: str) -> str:
         if not isinstance(email, str):
             raise TypeError(f"Input {email} must be a str.")
