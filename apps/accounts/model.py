@@ -1,14 +1,16 @@
 from typing import Dict, Optional
 from apps.accounts.utils.password import Password
-from settings.database import Database
+from settings.database import db_instance as database
 
 
 class Users:
 
     def __init__(self):
-        self.database = Database()
+        self.database = database
 
     def create_user(self, email: str, password: str) -> bool:
+        if self.get_user(email):
+            return False 
         hashed_password = Password.hash_password(password)
         self.database["users"].append({"email": email, "password": hashed_password})
         return True

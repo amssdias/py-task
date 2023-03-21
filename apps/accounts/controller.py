@@ -38,8 +38,12 @@ class AccountsController:
         if not user_cleaned_data:
             return False
 
-        self.model.create_user(email, password)
-        self.view.info("User registered successfully")
+        user_created = self.model.create_user(email, password)
+        if user_created:
+            self.view.info("User registered successfully")
+        else:
+            self.view.error("Email already registered.")
+
         return True
 
     def logout(self, controller) -> None:
