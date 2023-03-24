@@ -24,6 +24,7 @@ class AccountsController:
 
         if password_is_valid:
             controller.user_logged = True
+            controller.user_email = email
             self.view.info("User logged successfully.")
             return True
         

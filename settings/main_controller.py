@@ -9,6 +9,7 @@ class MainController:
 
     def __init__(self):
         self._user_logged = False
+        self.user_email = None
         self.menu_actions = ACCOUNTS_MENU_ACTIONS
 
     @property
@@ -44,6 +45,7 @@ class MainController:
             user_option = input(TODO_MENU)
         else:
             user_option = input(ACCOUNTS_MENU)
+        print()
         return self.validate_user_option(user_option)
 
     def validate_user_option(self, user_option: str) -> Optional[int]:
