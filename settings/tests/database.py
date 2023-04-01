@@ -1,10 +1,10 @@
 import sqlite3
 from settings.database.database import DatabaseConnection
-from settings.database.utils import create_tables_database
+from settings.settings import TEST_DATABASE_PATH
 
 
 class TestDatabaseConnection(DatabaseConnection):
-    database_path = "test.db"
+    database_path = TEST_DATABASE_PATH
 
     def __enter__(self):
         self.connection = sqlite3.connect(self.database_path)
