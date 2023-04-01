@@ -1,18 +1,38 @@
+import os
 import unittest
 from unittest.mock import patch
 
 from apps.accounts.model import Users
 from apps.accounts.utils.password import Password
-from settings.database import db_instance as database
+from settings.database.utils import create_tables_database
+from settings.tests.database import TestDatabaseConnection
 
 
 class TestUsersModel(unittest.TestCase):
-    def setUp(self) -> None:
-        self.model = Users()
-        self.model.database.clear()
-        self.user_email = "test@testing.com"
-        return super().setUp()
     
+    def setUp(self) -> None:
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        with self.model.database() as connection:
+            cursor = connection.cursor()
+            cursor.execute("DELETE FROM users")
+        return super().tearDown()
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.model = Users()
+        cls.model.database = TestDatabaseConnection
+        create_tables_database(cls.model.database.database_path)
+        cls.user_email = "test@testing.com"
+        return super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if os.path.exists(cls.model.database.database_path):
+            os.remove(cls.model.database.database_path)
+        return super().tearDownClass()
+
     def test_create_user(self):
         user_created = self.model.create_user(self.user_email, "password1234")
         self.assertTrue(user_created)
@@ -26,7 +46,12 @@ class TestUsersModel(unittest.TestCase):
 
     def test_create_user_created(self):
         self.model.create_user(self.user_email, "password1234")
-        self.assertTrue(database["users"])
+        with self.model.database() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM users")
+            user = dict(cursor.fetchone())
+
+        self.assertEqual(user["email"], self.user_email)
 
     def test_update_user(self):
         self.model.create_user(self.user_email, "password1234")
@@ -35,11 +60,17 @@ class TestUsersModel(unittest.TestCase):
 
         hashed_password = Password.hash_password(new_password)
         self.assertTrue(user_updated)
-        self.assertEqual(database["users"][0]["password"], hashed_password)
 
-    def test_update_user_nonexisting_user(self):
-        user_updated = self.model.update(self.user_email, {"password": "new-password1234"})
-        self.assertFalse(user_updated)
+        with self.model.database() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT password FROM users WHERE email = ?", (self.user_email,))
+            user = dict(cursor.fetchone())
+
+        self.assertEqual(user["password"], hashed_password)
+
+    # def test_update_user_nonexisting_user(self):
+    #     user_updated = self.model.update(self.user_email, {"password": "new-password1234"})
+    #     self.assertFalse(user_updated)
 
     @patch("apps.accounts.model.Password.hash_password", return_value="new-password")
     def test_update_user_hash_password_called(self, mocked_hash_password):

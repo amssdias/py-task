@@ -28,7 +28,7 @@ class TestAccountsController(unittest.TestCase):
         password = "12345678"
         self.controller.view.ask_login = Mock(return_value=(email, password))
         self.controller.view.info = Mock()
-        self.controller.model.get_user = Mock(return_value={"password": password})
+        self.controller.model.get_user = Mock(return_value={"user_id": 1, "password": password})
 
         with patch("apps.accounts.utils.password.Password.check_password") as mocked_check_password:
             mocked_check_password.return_value = True

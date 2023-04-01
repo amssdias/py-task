@@ -25,6 +25,7 @@ class AccountsController:
         if password_is_valid:
             controller.user_logged = True
             controller.user_email = email
+            controller.user_id = user["user_id"]
             self.view.info("User logged successfully.")
             return True
         
@@ -43,12 +44,14 @@ class AccountsController:
         if user_created:
             self.view.info("User registered successfully")
         else:
-            self.view.error("Email already registered.")
+            self.view.error("Sorry something went wrong. Try again.")
 
         return True
 
     def logout(self, controller) -> None:
         controller.user_logged = False
+        controller.user_email = None
+        controller.user_id = None
         self.view.info("User logged out.")
 
     def reset_password(self, _) -> bool:
@@ -69,8 +72,11 @@ class AccountsController:
 
         if not self.validate_password(password, password_):
             return False
+
+        if not self.model.update(email=email, new_values={"password": password}):
+            self.view.error("Sorry we had problems with the database, try again later.")
+            return False
         
-        self.model.update(email=email, new_values={"password": password})
         self.view.info("Password updated.")
         return True
 
