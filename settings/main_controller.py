@@ -10,6 +10,7 @@ class MainController:
     def __init__(self):
         self._user_logged = False
         self.user_email = None
+        self.user_id = None
         self.menu_actions = ACCOUNTS_MENU_ACTIONS
 
     @property
