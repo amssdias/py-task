@@ -15,11 +15,10 @@ class Users:
         hashed_password = Password.hash_password(password)
         try:
             with self.database(self.database_path) as connection:
-                # print(dir(connection))
                 cursor = connection.cursor()
                 cursor.execute("INSERT INTO users(email, password) VALUES(?, ?)", (email, hashed_password))
         except Exception as e:
-            print(e)
+            # TODO: Add log
             return False
         return True
 
@@ -33,6 +32,7 @@ class Users:
                     query = f"UPDATE users SET {key} = ? WHERE email = ?"
                     cursor.execute(query, (value, email))
         except Exception as e:
+            # TODO: Add log
             return False
         return True
 
@@ -40,8 +40,9 @@ class Users:
         try:
             with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+                cursor.execute("SELECT email, password, created_at FROM users WHERE email = ?", (email,))
                 user = cursor.fetchone()
         except Exception as e:
+            # TODO: Add log
             return None
         return dict(user) if user else None
