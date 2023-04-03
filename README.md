@@ -1,7 +1,9 @@
 [python-download]: https://www.python.org/downloads/
 
 ![Python Badge](https://img.shields.io/badge/Python-3.9-blue?logo=python)
-[![Build](https://github.com/amssdias/py-task/actions/workflows/testing.yml/badge.svg?branch=main)](https://github.com/amssdias/py-task/actions/workflows/testing.yml)
+[![Docker](https://badgen.net/badge/icon/docker?icon=docker&label)](https://https://docker.com/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Build](https://github.com/amssdias/py-task/actions/workflows/testing.yml/badge.svg)](https://github.com/amssdias/py-task/actions/workflows/testing.yml)
 
 <h1 align=center>Py Task</h1>
 
@@ -32,6 +34,20 @@ git clone https://github.com/amssdias/py-task.git
 cd py-task
 ```
 
+
+#### Run with Docker
+
+1. Build the Docker image:
+
+```
+docker build -t py-task .
+```
+
+2. Run the Docker container:
+
+```
+docker run -it py-task
+```
 
 #### Run
 
