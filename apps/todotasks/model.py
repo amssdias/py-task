@@ -1,36 +1,58 @@
-from typing import List, Optional
-from settings.database import db_instance as database
+from typing import Dict, List, Optional
+from settings.database import DatabaseConnection
+from settings.database.utils import dict_factory
+from settings.settings import DATABASE_PATH
+
 
 class TodoModel:
 
-    def __init__(self):
-        self.database = database
+    def __init__(self, database_path=DATABASE_PATH):
+        self.database_path = database_path
+        self.database = DatabaseConnection
     
-    def create_task(self, user_email: str, new_task: str) -> bool:
-        for user in self.database["users"]:
-            if user["email"] == user_email:
-                task = user.setdefault("tasks", [new_task])
-                if new_task not in task:
-                    user["tasks"].extend([new_task])
-                return True
-        return False
+    def create_task(self, user_id, new_task: str) -> bool:
+        try:
+            with DatabaseConnection() as connection:
+                print("Inserting...")
+                cursor = connection.cursor()
+                cursor.execute("INSERT INTO tasks(task_name, user_id) VALUES(?, ?)", (new_task, user_id))
+        except Exception as e:
+            print(e)
+            return False
+        return True
 
-    def update(self, user_email, task_id, new_task):
-        for user in self.database["users"]:
-            if user["email"] == user_email:
-                user["tasks"][task_id - 1] = new_task
-                return True
-        return False
+    def update(self, user_id, task_id, new_task: str) -> bool:
+        try:
+            with DatabaseConnection() as connection:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE tasks SET task_name = ? WHERE task_id = ? AND user_id = ?", (new_task, task_id, user_id))
+        except Exception as e:
+            print(e)
+            return False
+        return True
 
-    def get_all_tasks(self, user_email) -> Optional[List]:
-        for user in self.database["users"]:
-            if user["email"] == user_email:
-                return user.get("tasks")
-        return False
+    def get_all_tasks(self, user_id, asc=False) -> Optional[List[Dict]]: 
+        query = f"SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at {'ASC' if asc else 'DESC'}"
+
+        try:
+            with DatabaseConnection(row_factory=dict_factory) as connection:
+                cursor = connection.cursor()
+                cursor.execute(query, (user_id, ))
+                tasks = cursor.fetchall()
+        except Exception as e:
+            return None    
+        return tasks if tasks else None
     
-    def delete(self, user_email, task_id) -> bool:
-        for user in self.database["users"]:
-            if user["email"] == user_email:
-                user["tasks"].pop(task_id - 1)
-                return True
-        return False
+    def delete(self, user_id, task_id) -> bool:
+        try:
+            with DatabaseConnection() as connection:
+                cursor = connection.cursor()
+                cursor.execute("DELETE FROM tasks WHERE task_id = ? AND user_id = ?", (task_id, user_id))
+        except Exception as e:
+            print(e)
+            return False
+        return True
+
+    def get_task_id(self, user_id, task_id):
+        tasks = self.get_all_tasks(user_id=user_id)
+        return tasks[task_id - 1]["task_id"]
