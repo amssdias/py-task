@@ -185,6 +185,7 @@ class TestAccountsController(unittest.TestCase):
         self.controller.model.get_user = Mock(return_value=True)
         self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345678"])
         self.controller.validate_password = Mock(return_value=True)
+        self.controller.model.update = Mock(return_value=True)
         self.controller.view.info = Mock()
 
         c = Mock()

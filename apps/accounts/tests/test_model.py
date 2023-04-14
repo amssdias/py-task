@@ -68,9 +68,9 @@ class TestUsersModel(unittest.TestCase):
 
         self.assertEqual(user["password"], hashed_password)
 
-    # def test_update_user_nonexisting_user(self):
-    #     user_updated = self.model.update(self.user_email, {"password": "new-password1234"})
-    #     self.assertFalse(user_updated)
+    def test_update_user_nonexisting_user(self):
+        user_updated = self.model.update(self.user_email, {"password": "new-password1234"})
+        self.assertFalse(user_updated)
 
     @patch("apps.accounts.model.Password.hash_password", return_value="new-password")
     def test_update_user_hash_password_called(self, mocked_hash_password):
@@ -88,5 +88,3 @@ class TestUsersModel(unittest.TestCase):
         result = self.model.get_user(self.user_email)
 
         self.assertIsNone(result)
-
-    

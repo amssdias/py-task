@@ -23,14 +23,18 @@ class Users:
         return True
 
     def update(self, email: str, new_values: Dict) -> bool:
+        user = self.get_user(email)
+        if not user:
+            return False
+
         try:
             with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
                 for key, value in new_values.items():
                     if key == "password":
                         value = Password.hash_password(value)
-                    query = f"UPDATE users SET {key} = ? WHERE email = ?"
-                    cursor.execute(query, (value, email))
+                    query = f"UPDATE users SET {key} = ? WHERE user_id = ?"
+                    cursor.execute(query, (value, user["user_id"]))
         except Exception as e:
             # TODO: Add log
             return False
@@ -40,7 +44,7 @@ class Users:
         try:
             with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT email, password, created_at FROM users WHERE email = ?", (email,))
+                cursor.execute("SELECT user_id, email, password, created_at FROM users WHERE email = ?", (email,))
                 user = cursor.fetchone()
         except Exception as e:
             # TODO: Add log
