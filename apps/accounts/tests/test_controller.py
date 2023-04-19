@@ -322,8 +322,34 @@ class TestAccountsController(unittest.TestCase):
         self.controller.validate_email.assert_called_once()
         self.controller.validate_password.assert_called_once()
 
-    def _test_validate_email(self):
-        pass
+    def test_validated_domain_emails(self):
+        valid_domains = ["com", "net", "es", "org"]
+
+        for domain in valid_domains:
+            email = f"test@test.{domain}"
+            validated_email = self.controller.validate_email(email)
+            self.assertEqual(validated_email, email)
+            self.assertIsInstance(validated_email, str)
+
+    def test_validated_email_with_spaces(self):
+            email = "   test@test.com   "
+            validated_email = self.controller.validate_email(email)
+            self.assertEqual(validated_email, email.strip())
+            self.assertIsInstance(validated_email, str)
+
+    def test_validate_email_wrong_types(self):
+            not_allowed_types = [True, 123, 2.12, None]
+
+            for type in not_allowed_types:
+                with self.assertRaises(TypeError):
+                    self.controller.validate_email(type)
+
+    @patch("builtins.print")
+    def test_invalid_domain_email(self, mocked_print):
+        email = "test@test.c"
+        validated_email = self.controller.validate_email(email)
+        self.assertEqual(validated_email, None)
+        self.assertFalse(validated_email)
 
     def _test_validate_password(self):
         pass
