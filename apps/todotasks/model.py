@@ -57,6 +57,6 @@ class TodoModel:
             return False
         return True
 
-    def get_task_id(self, user_id, task_id):
+    def get_task_id(self, user_id, task_id) -> int:
         tasks = self.get_all_tasks(user_id=user_id)
         return tasks[task_id - 1]["task_id"]

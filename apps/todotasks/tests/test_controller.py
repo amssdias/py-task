@@ -93,13 +93,48 @@ class TestTodoController(unittest.TestCase):
         self.controller.model.get_all_tasks.assert_called_once_with(user_id=self.main_controller.user_id)
         self.controller.view.display_list_tasks.assert_called_once()
 
-    def _test_update_task(self):
+    @patch("builtins.input")
+    def test_update_task(self, mocked_input):
         self.controller.get_and_validate_task_id = Mock(return_value=1)
+        mocked_input.return_value = "Task updated"
+        self.controller.model.get_task_id = Mock(return_value=1)
+        self.controller.model.update = Mock()
+        self.controller.view.info = Mock()
 
         result = self.controller.update_task(self.main_controller)
+        self.assertTrue(result)
+        self.controller.get_and_validate_task_id.assert_called_once()
+        mocked_input.assert_called_once_with("New task name: ")
+        self.controller.model.get_task_id.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1)
+        self.controller.model.update.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1, new_task="Task updated")
+        self.controller.view.info.assert_called_once_with("Task updated!")
+
+    def test_update_task_id_invalid(self):
+        self.controller.get_and_validate_task_id = Mock(return_value=False)
+        result = self.controller.update_task(self.main_controller)
+
+        self.assertFalse(result)
 
     def test_delete_task(self):
-        pass
+        self.controller.get_and_validate_task_id = Mock(return_value=1)
+        self.controller.model.get_task_id = Mock(return_value=1)
+        self.controller.model.delete = Mock()
+        self.controller.view.info = Mock()
+
+        result = self.controller.delete_task(self.main_controller)
+
+        self.assertTrue(result)
+        self.controller.get_and_validate_task_id.assert_called_once_with(user_id=self.main_controller.user_id)
+        self.controller.model.get_task_id.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1)
+        self.controller.model.delete.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1)
+        self.controller.view.info.assert_called_once_with("Task with id '1' deleted.")
+
+    def test_delete_task_id_invalid(self):
+        self.controller.get_and_validate_task_id = Mock(return_value=False)
+        result = self.controller.delete_task(self.main_controller)
+
+        self.assertFalse(result)
+
 
     def test_get_and_validate_task_id(self):
         pass
