@@ -10,12 +10,6 @@ from settings.tests.database import TestDatabaseConnection
 
 class TestTodoController(unittest.TestCase):
 
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
     @classmethod
     def setUpClass(cls) -> None:
         cls.controller = TodoController()
@@ -95,46 +89,82 @@ class TestTodoController(unittest.TestCase):
 
     @patch("builtins.input")
     def test_update_task(self, mocked_input):
-        self.controller.get_and_validate_task_id = Mock(return_value=1)
-        mocked_input.return_value = "Task updated"
-        self.controller.model.get_task_id = Mock(return_value=1)
-        self.controller.model.update = Mock()
-        self.controller.view.info = Mock()
+        with patch.object(self.controller, "get_and_validate_task_id", return_value=1) as mocked_validate_task_id:
+            mocked_input.return_value = "Task updated"
+            self.controller.model.get_task_id = Mock(return_value=1)
+            self.controller.model.update = Mock()
+            self.controller.view.info = Mock()
 
-        result = self.controller.update_task(self.main_controller)
+            result = self.controller.update_task(self.main_controller)
+
         self.assertTrue(result)
-        self.controller.get_and_validate_task_id.assert_called_once()
+        mocked_validate_task_id.assert_called_once()
         mocked_input.assert_called_once_with("New task name: ")
         self.controller.model.get_task_id.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1)
         self.controller.model.update.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1, new_task="Task updated")
         self.controller.view.info.assert_called_once_with("Task updated!")
 
     def test_update_task_id_invalid(self):
-        self.controller.get_and_validate_task_id = Mock(return_value=False)
-        result = self.controller.update_task(self.main_controller)
+        with patch.object(self.controller, "get_and_validate_task_id", return_value=False):
+            result = self.controller.update_task(self.main_controller)
 
         self.assertFalse(result)
 
     def test_delete_task(self):
-        self.controller.get_and_validate_task_id = Mock(return_value=1)
-        self.controller.model.get_task_id = Mock(return_value=1)
-        self.controller.model.delete = Mock()
-        self.controller.view.info = Mock()
+        with patch.object(self.controller, "get_and_validate_task_id", return_value=1) as mocked_validate_task_id:
+            self.controller.model.get_task_id = Mock(return_value=1)
+            self.controller.model.delete = Mock()
+            self.controller.view.info = Mock()
 
-        result = self.controller.delete_task(self.main_controller)
+            result = self.controller.delete_task(self.main_controller)
 
         self.assertTrue(result)
-        self.controller.get_and_validate_task_id.assert_called_once_with(user_id=self.main_controller.user_id)
+        mocked_validate_task_id.assert_called_once_with(user_id=self.main_controller.user_id)
         self.controller.model.get_task_id.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1)
         self.controller.model.delete.assert_called_once_with(user_id=self.main_controller.user_id, task_id=1)
         self.controller.view.info.assert_called_once_with("Task with id '1' deleted.")
 
     def test_delete_task_id_invalid(self):
-        self.controller.get_and_validate_task_id = Mock(return_value=False)
-        result = self.controller.delete_task(self.main_controller)
+        with patch.object(self.controller, "get_and_validate_task_id", return_value=False):
+            result = self.controller.delete_task(self.main_controller)
 
         self.assertFalse(result)
 
+    @patch("builtins.input")
+    def test_get_and_validate_task_id(self, mocked_input):
+        self.controller.model.get_all_tasks = Mock(return_value=[1, 2])
+        mocked_input.return_value = "1"
 
-    def test_get_and_validate_task_id(self):
-        pass
+        result = self.controller.get_and_validate_task_id(user_id=self.main_controller.user_id)
+
+        self.assertEqual(result, 1)
+
+    def test_get_and_validate_task_id_no_tasks(self):
+        self.controller.model.get_all_tasks = Mock(return_value=False)
+        self.controller.view.error = Mock()
+        result = self.controller.get_and_validate_task_id(user_id=self.main_controller.user_id)
+
+        self.assertFalse(result)
+        self.controller.view.error.assert_called_once_with("You don't have any tasks.")
+
+    @patch("builtins.input")
+    def test_get_and_validate_task_id_input_letter(self, mocked_input):
+        self.controller.model.get_all_tasks = Mock(return_value=[1, 2])
+        self.controller.view.error = Mock()
+        mocked_input.return_value = "a"
+
+        result = self.controller.get_and_validate_task_id(user_id=self.main_controller.user_id)
+
+        self.assertFalse(result)
+        self.controller.view.error.assert_called_once_with("Task id must be a number")
+
+    @patch("builtins.input")
+    def test_get_and_validate_task_id_nonexisting_task(self, mocked_input):
+        self.controller.model.get_all_tasks = Mock(return_value=[1, 2])
+        self.controller.view.error = Mock()
+        mocked_input.return_value = "4"
+
+        result = self.controller.get_and_validate_task_id(user_id=self.main_controller.user_id)
+
+        self.assertFalse(result)
+        self.controller.view.error.assert_called_once_with("We couldn't find a task with the id of '4'")
