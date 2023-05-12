@@ -27,56 +27,51 @@ class TestTodoController(unittest.TestCase):
         return super().tearDownClass()
     
     def test_create_new_task(self):
-        self.controller.view.prompt_user_question = Mock(return_value="New task")
-        self.controller.model.create_task = Mock(return_value=True) 
-        self.controller.view.info = Mock()
-        result = self.controller.create_new_task(self.main_controller)
+        with patch.object(self.controller.model, "create_task", return_value=True) as mocked_create_task:
+            self.controller.view.prompt_user_question = Mock(return_value="New task")
+            self.controller.view.info = Mock()
+            result = self.controller.create_new_task(self.main_controller)
 
         self.assertTrue(result)
         self.controller.view.prompt_user_question.assert_called_once_with("Type new task: ")
-        self.controller.model.create_task.assert_called_once()
+        mocked_create_task.assert_called_once()
         self.controller.view.info.assert_called_once_with("Task created successfully.")
 
     def test_create_new_task_nonexisting_user(self):
-        self.controller.view.prompt_user_question = Mock(return_value="New task")
-        self.controller.model.create_task = Mock(return_value=False) 
-        self.controller.view.error = Mock()
-        result = self.controller.create_new_task(self.main_controller)
+        with patch.object(self.controller.model, "create_task", return_value=False) as mocked_create_task:
+            self.controller.view.prompt_user_question = Mock(return_value="New task")
+            self.controller.view.error = Mock()
+            result = self.controller.create_new_task(self.main_controller)
 
         self.assertFalse(result)
         self.controller.view.prompt_user_question.assert_called_once()
+        mocked_create_task.assert_called_once()
         self.controller.view.error.assert_called_once_with("Task was not saved. Something went wrong. Try again.")
 
-    def _test_create_new_task_created(self):
-        # TODO: Review why it's using main database to insert and get values
+    def test_create_new_task_created(self):
         self.controller.view.prompt_user_question = Mock(return_value="New task")
         self.controller.view.info = Mock()
         self.controller.create_new_task(self.main_controller)
 
-        with self.controller.model.database() as connection:
+        with self.controller.model.database(TestDatabaseConnection.database_path) as connection:
             cursor = connection.cursor()
             task = cursor.execute("SELECT * FROM tasks").fetchall()
 
         self.assertTrue(task)
-        # self.assertEqual("New task", task)
+        self.assertEqual("New task", task[0]["task_name"])
+        self.assertEqual("Not started", task[0]["status"])
 
-    @patch("apps.todotasks.view.print")
-    def _test_display_all_tasks(self, mocked_print):
-        # TODO: Review why it's using main database to insert and get values
-        with self.controller.model.database() as connection:
+    def test_display_all_tasks(self):
+        with self.controller.model.database(TestDatabaseConnection.database_path) as connection:
             cursor = connection.cursor()
             cursor.execute("INSERT INTO tasks(task_name, user_id) VALUES('first task', 1)")
 
-        with self.controller.model.database() as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT * FROM tasks")
-            c = cursor.fetchall()
-
-            for cc in c:
-                print(dict(cc))
-
+        self.controller.model.get_all_tasks = Mock()
+        self.controller.view.display_list_tasks = Mock()
         result = self.controller.display_all_tasks(self.main_controller)
-        # self.assertTrue(result)
+        
+        self.assertTrue(result)
+        self.controller.view.display_list_tasks.assert_called_once()
 
     @patch("builtins.print")
     def test_display_all_tasks_func_called(self, mocked_print):

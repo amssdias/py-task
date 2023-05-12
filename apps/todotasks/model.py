@@ -12,7 +12,7 @@ class TodoModel:
     
     def create_task(self, user_id, new_task: str) -> bool:
         try:
-            with DatabaseConnection() as connection:
+            with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
                 cursor.execute("INSERT INTO tasks(task_name, user_id) VALUES(?, ?)", (new_task, user_id))
         except Exception as e:
@@ -22,7 +22,7 @@ class TodoModel:
 
     def update(self, user_id, task_id, new_task: str) -> bool:
         try:
-            with DatabaseConnection() as connection:
+            with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
                 cursor.execute("UPDATE tasks SET task_name = ? WHERE task_id = ? AND user_id = ?", (new_task, task_id, user_id))
         except Exception as e:
@@ -38,7 +38,7 @@ class TodoModel:
         ORDER BY created_at {'ASC' if asc else 'DESC'}"""
 
         try:
-            with DatabaseConnection(row_factory=dict_factory) as connection:
+            with self.database(path=self.database_path, row_factory=dict_factory) as connection:
                 cursor = connection.cursor()
                 cursor.execute(query, (user_id, ))
                 tasks = cursor.fetchall()
@@ -49,7 +49,7 @@ class TodoModel:
     
     def delete(self, user_id, task_id) -> bool:
         try:
-            with DatabaseConnection() as connection:
+            with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
                 cursor.execute("DELETE FROM tasks WHERE task_id = ? AND user_id = ?", (task_id, user_id))
         except Exception as e:
