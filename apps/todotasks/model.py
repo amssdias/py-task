@@ -18,7 +18,7 @@ class TodoModel:
         except Exception as e:
             # TODO: Add log
             return False
-        return True
+        return True if cursor.rowcount >= 1 else False
 
     def update(self, user_id, task_id, new_task: str) -> bool:
         try:
@@ -28,7 +28,7 @@ class TodoModel:
         except Exception as e:
             # TODO: Add log
             return False
-        return True
+        return True if cursor.rowcount >= 1 else False
 
     def get_all_tasks(self, user_id, asc=False) -> Optional[List[Dict]]: 
         query = f"""
@@ -55,7 +55,7 @@ class TodoModel:
         except Exception as e:
             # TODO: Add log
             return False
-        return True
+        return True if cursor.rowcount >= 1 else False
 
     def get_task_id(self, user_id, task_id) -> int:
         tasks = self.get_all_tasks(user_id=user_id)
