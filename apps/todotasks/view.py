@@ -3,7 +3,7 @@ from colorama import Fore
 
 class TodoView:
 
-    def prompt_user_question(self, question):
+    def prompt_user_question(self, question) -> str:
         return input(Fore.GREEN + question)
     
     def info(self, prompt) -> None:
