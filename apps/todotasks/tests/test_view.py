@@ -44,7 +44,29 @@ class TestTodoView(unittest.TestCase):
 
     @patch("builtins.print")
     def test_display_list_tasks_print_called(self, mocked_print):
-        result = self.view.display_list_tasks(["First task", "Second task"])
+        tasks = [
+            {
+                "task_id": 1, 
+                "task_name": "First task",
+                "task_description": "Description",
+                "status": "Status",
+                "priority": "Priority",
+                "due_date": "Due date",
+                "created_at": "Created",
+                "user_id": 1,
+            },
+            {
+                "task_id": 2, 
+                "task_name": "Second task",
+                "task_description": "Description",
+                "status": "Status",
+                "priority": "Priority",
+                "due_date": "Due date",
+                "created_at": "Created",
+                "user_id": 1,
+            }
+        ]
+        result = self.view.display_list_tasks(tasks)
 
         self.assertEqual(None, result)
         mocked_print.assert_called()
