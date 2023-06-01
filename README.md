@@ -1,6 +1,8 @@
 [python-download]: https://www.python.org/downloads/
+[redis-download]: https://redis.io/download/
 
 ![Python Badge](https://img.shields.io/badge/Python-3.9-blue?logo=python)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=flat&logo=redis&logoColor=white)
 [![Docker](https://badgen.net/badge/icon/docker?icon=docker&label)](https://https://docker.com/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Build](https://github.com/amssdias/py-task/actions/workflows/testing.yml/badge.svg)](https://github.com/amssdias/py-task/actions/workflows/testing.yml)
@@ -20,6 +22,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Pre requisites
 
 - [Python][python-download] - 3.9
+- [Redis][redis-download]
 - [Docker](https://www.docker.com/) (Optional)
 
 ### Installing
@@ -63,3 +66,10 @@ pip install -r requirements.txt
 ```python
 python main.py
 ```
+
+
+## :mag_right: Usage
+
+You can register so after login and save tasks from your terminal.
+
+Have fun :smile:
