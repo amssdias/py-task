@@ -19,6 +19,9 @@ class AccountsView:
     def ask_login(self) -> Tuple:
         return self.ask_user_email(), self.ask_user_password()
     
+    def ask_pin(self) -> str:
+        return input("Type your pin here: ")
+
     def ask_register(self) -> Tuple:
         return self.ask_user_email(), self.ask_user_password(), self.ask_user_password(prompt="Enter your password again: ")
 

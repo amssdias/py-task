@@ -28,7 +28,7 @@ class TestAccountsController(unittest.TestCase):
         password = "12345678"
         self.controller.view.ask_login = Mock(return_value=(email, password))
         self.controller.view.info = Mock()
-        self.controller.model.get_user = Mock(return_value={"user_id": 1, "password": password})
+        self.controller.model.get_user = Mock(return_value={"user_id": 1, "password": password, "active": 1})
 
         with patch("apps.accounts.utils.password.Password.check_password") as mocked_check_password:
             mocked_check_password.return_value = True
@@ -62,11 +62,32 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.error.assert_called_once()
         self.controller.view.error.assert_called_once_with("User not registered.")
 
+    def test_login_user_not_active(self):
+        email = "testing"
+        password = "12345678"
+        self.controller.view.ask_login = Mock(return_value=(email, password))
+        self.controller.model.get_user = Mock(return_value={"user_id": 1, "password": password, "active": 0})
+        self.controller.view.error = Mock()
+        self.controller.view.ask_pin = Mock(return_value="1234")
+        self.controller.validate_pin = Mock(return_value=False)
+
+        mock = Mock()
+        result = self.controller.login(mock)
+
+        self.assertFalse(result)
+
+        self.controller.view.ask_login.assert_called_once()
+        self.controller.model.get_user.assert_called_once()
+        self.controller.model.get_user.assert_called_once_with(email)
+        self.controller.view.error.assert_called_once()
+        self.controller.view.ask_pin.assert_called_once()
+        self.controller.validate_pin.assert_called_once()
+
     def test_login_password_incorrect(self):
         email = "testing"
         password = "12345678"
         self.controller.view.ask_login = Mock(return_value=(email, password))
-        self.controller.model.get_user = Mock(return_value={"password": password})
+        self.controller.model.get_user = Mock(return_value={"password": password, "active": 1})
         self.controller.view.error = Mock()
 
         with patch("apps.accounts.utils.password.Password.check_password") as mocked_check_password:
@@ -82,7 +103,8 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.error.assert_called_once()
         self.controller.view.error.assert_called_once_with("Password incorrect.")
 
-    def test_register_successful(self):
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_register_successful(self, mocked_send_account_pin_email):
         register_info = ("test@testing.com", "12345678", "12345678")
         self.controller.view.ask_register = Mock(return_value=register_info)
         self.controller.model.create_user = Mock()
@@ -92,8 +114,10 @@ class TestAccountsController(unittest.TestCase):
         result = self.controller.register(mock)
 
         self.assertTrue(result)
+        mocked_send_account_pin_email.assert_called_once()
 
-    def test_register_ask_register_called(self):
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_register_ask_register_called(self, mocked_send_account_pin_email):
     
         register_info = ("test@testing.com", "12345678", "12345678")
         self.controller.view.ask_register = Mock(return_value=register_info)
@@ -104,8 +128,10 @@ class TestAccountsController(unittest.TestCase):
         self.controller.register(mock)
 
         self.controller.view.ask_register.assert_called_once()
+        mocked_send_account_pin_email.assert_called_once()
 
-    def test_register_create_user_called(self):
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_register_create_user_called(self, mocked_send_account_pin_email):
         register_info = ("test@testing.com", "12345678", "12345678")
         self.controller.view.ask_register = Mock(return_value=register_info)
         self.controller.model.create_user = Mock()
@@ -116,8 +142,10 @@ class TestAccountsController(unittest.TestCase):
 
         self.controller.model.create_user.assert_called_once()
         self.controller.model.create_user.assert_called_once_with("test@testing.com", "12345678")
+        mocked_send_account_pin_email.assert_called_once()
 
-    def test_register_info_called(self):
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_register_info_called(self, mocked_send_account_pin_email):
         register_info = ("test@testing.com", "12345678", "12345678")
         self.controller.view.ask_register = Mock(return_value=register_info)
         self.controller.model.create_user = Mock()
@@ -127,7 +155,8 @@ class TestAccountsController(unittest.TestCase):
         self.controller.register(mock)
 
         self.controller.view.info.assert_called_once()
-        self.controller.view.info.assert_called_once_with("User registered successfully")
+        self.controller.view.info.assert_called_once_with("User registered successfully, check your email to activate your account.")
+        mocked_send_account_pin_email.assert_called_once()
 
     def test_register_invalid_email(self):
         register_info = ("test", "12345678", "12345678")
@@ -353,3 +382,32 @@ class TestAccountsController(unittest.TestCase):
 
     def _test_validate_password(self):
         pass
+
+    def test_validate_pin_successful(self):
+        with patch("apps.accounts.controller.redis_connection") as mocked_redis_connection:
+            pin = "1234"
+            mocked_redis_connection.get = Mock(return_value=pin.encode("utf-8"))
+
+            self.controller.model.update = Mock()
+            self.controller.view.info = Mock()
+
+            result = self.controller.validate_pin(pin=pin, email="test@testing.com")
+
+        self.assertTrue(result)
+        mocked_redis_connection.get.assert_called_once_with("test@testing.com")
+        self.controller.model.update.assert_called_once_with(email="test@testing.com", new_values={"active": 1})
+        self.controller.view.info.assert_called_once_with("Your account is now active.")
+
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_validate_pin_expired(self, mocked_send_account_pin_email):
+        with patch("apps.accounts.controller.redis_connection") as mocked_redis_connection:
+            mocked_redis_connection.get = Mock(return_value=False)
+
+            self.controller.view.info = Mock()
+
+            result = self.controller.validate_pin(pin="1234", email="test@testing.com")
+
+        self.assertFalse(result)
+        mocked_redis_connection.get.assert_called_once()
+        self.controller.view.info.assert_called()
+        mocked_send_account_pin_email.assert_called_once()

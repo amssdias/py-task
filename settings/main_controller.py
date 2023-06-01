@@ -1,6 +1,6 @@
 import sys
 from typing import Optional
-from apps.accounts.constants import ACCOUNTS_MENU, ACCOUNTS_MENU_ACTIONS
+from apps.accounts.constants.menu import ACCOUNTS_MENU, ACCOUNTS_MENU_ACTIONS
 from apps.todotasks.constants import TODO_MENU, TODO_MENU_ACTIONS
 
 

@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+from apps.accounts.constants.database import DB_COLUMNS
 
 from apps.accounts.utils.password import Password
 from settings.database import DatabaseConnection
@@ -10,6 +11,7 @@ class Users:
     def __init__(self, database_path=DATABASE_PATH):
         self.database_path = database_path
         self.database = DatabaseConnection
+        self.columns = DB_COLUMNS
 
     def create_user(self, email: str, password: str) -> bool:
         hashed_password = Password.hash_password(password)
@@ -44,7 +46,8 @@ class Users:
         try:
             with self.database(self.database_path) as connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT user_id, email, password, created_at FROM users WHERE email = ?", (email,))
+                query = f"SELECT {', '.join(self.columns)} FROM users WHERE email = ?"
+                cursor.execute(query, (email,))
                 user = cursor.fetchone()
         except Exception as e:
             # TODO: Add log

@@ -1,9 +1,13 @@
 import re
 from typing import Optional, Dict
+from apps.accounts.constants.database import ACTIVE
 
 from apps.accounts.model import Users
 from apps.accounts.utils.password import Password
+from apps.accounts.utils.send_pin_email import send_account_activation_pin_email
 from apps.accounts.view import AccountsView
+
+from settings.database import redis_connection
 
 
 class AccountsController:
@@ -19,6 +23,12 @@ class AccountsController:
         if not user:
             self.view.error("User not registered.")
             return False
+        elif not user["active"]:
+            self.view.error("It seems like your account is not active. Check your email for a pin we sent to you, so you can activate it.")
+            pin = self.view.ask_pin()
+            
+            if not self.validate_pin(pin=pin, email=email):
+                return False
         
         password_is_valid = Password.check_password(password, user["password"])
 
@@ -42,7 +52,10 @@ class AccountsController:
 
         user_created = self.model.create_user(email, password)
         if user_created:
-            self.view.info("User registered successfully")
+            # TODO: Send email async
+            send_account_activation_pin_email(email)
+
+            self.view.info("User registered successfully, check your email to activate your account.")
         else:
             self.view.error("Sorry something went wrong. Try again.")
 
@@ -109,3 +122,24 @@ class AccountsController:
             return None
 
         return password
+
+    def validate_pin(self, pin: str, email: str) -> bool:
+        user_pin = redis_connection.get(email)
+        
+        if not user_pin:
+            self.view.info("Looks like your pin was expired, we will send you a new one right now!")
+            self.view.info("Check you email inbox. And try to login again.")
+
+            send_account_activation_pin_email(email)
+
+            return False
+        
+        elif user_pin.decode("utf-8") == pin:
+            try:
+                self.model.update(email=email, new_values={ACTIVE: 1})
+                self.view.info("Your account is now active.")
+                return True
+            except Exception as e:
+                # TODO: Logs
+                self.view.error("Sorry something went wrong. Contact with admin.")
+                return False
