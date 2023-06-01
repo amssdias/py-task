@@ -37,6 +37,10 @@ git clone https://github.com/amssdias/py-task.git
 cd py-task
 ```
 
+3. Update the ".env.sample":
+   - Make sure you type a secret key (random characters);
+   - Use your gmail account and type your password (If you want to use other account your should update as well the REDIS_HOST)
+   - Change the file name to ".env"
 
 #### Run with Docker
 
