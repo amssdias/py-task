@@ -74,11 +74,11 @@ class AccountsController:
             self.view.error("Sorry, user does not exist. Register first.")
             return False
 
-        # TODO:
-        # - Create a pin
-        # - Send an email with that pin
-        # - Ask user to enter that pin here so we confirm it's him
-        # - Ask him to prompt his new password and update
+        send_account_activation_pin_email(email)
+        
+        pin = self.view.ask_pin()
+        if not self.validate_pin(pin=pin, email=email):
+            self.view.error("Sorry pin is not correct, check your email again.")
 
         password = self.view.ask_user_password(prompt="Enter your new password: ")
         password_ = self.view.ask_user_password(prompt="Enter your new password again: ")

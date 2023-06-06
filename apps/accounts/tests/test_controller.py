@@ -209,9 +209,12 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.info.assert_called_once()
         self.controller.view.info.assert_called_once_with("User logged out.")
 
-    def test_reset_password(self):
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_reset_password(self, mocked_send_account_pin_email):
         self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
         self.controller.model.get_user = Mock(return_value=True)
+        self.controller.view.ask_pin = Mock(return_value="1234")
+        self.controller.validate_pin = Mock(return_value=True)
         self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345678"])
         self.controller.validate_password = Mock(return_value=True)
         self.controller.model.update = Mock(return_value=True)
@@ -221,6 +224,7 @@ class TestAccountsController(unittest.TestCase):
         result = self.controller.reset_password(c)
 
         self.assertTrue(result)
+        mocked_send_account_pin_email.assert_called_once()
 
     def test_reset_password_unexisted_user(self):
         self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
@@ -236,25 +240,33 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.error.assert_called_once()
         self.controller.view.error.assert_called_once_with("Sorry, user does not exist. Register first.")
 
-    def test_reset_password_mismatch_passwords(self):
+    @patch("apps.accounts.controller.send_account_activation_pin_email")
+    def test_reset_password_mismatch_passwords(self, mocked_send_account_pin_email):
         self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
         self.controller.model.get_user = Mock(return_value=True)
         self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345679"])
         self.controller.view.error = Mock()
+        self.controller.view.ask_pin = Mock(return_value="1234")
+        self.controller.validate_pin = Mock(return_value=True)
 
         c = Mock()
         result = self.controller.reset_password(c)
 
         self.assertFalse(result)
+        mocked_send_account_pin_email.assert_called_once()
         self.controller.view.ask_user_password.assert_called()
         self.controller.view.error.assert_called_once()
         self.controller.view.error.assert_called_once_with("Passwords mismatch!")
+        self.controller.view.ask_pin.assert_called_once()
+        self.controller.validate_pin.assert_called_once()
 
     def test_reset_password_short_length(self):
         self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
         self.controller.model.get_user = Mock(return_value=True)
         self.controller.view.ask_user_password = Mock(side_effect=["1234567", "1234567"])
         self.controller.view.error = Mock()
+        self.controller.view.ask_pin = Mock(return_value="1234")
+        self.controller.validate_pin = Mock(return_value=True)
 
         c = Mock()
         result = self.controller.reset_password(c)
@@ -263,6 +275,8 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.ask_user_password.assert_called()
         self.controller.view.error.assert_called_once()
         self.controller.view.error.assert_called_once_with("Password too short.")
+        self.controller.view.ask_pin.assert_called_once()
+        self.controller.validate_pin.assert_called_once()
 
     def test_reset_password_validate_password_called(self):
         self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
@@ -270,6 +284,8 @@ class TestAccountsController(unittest.TestCase):
         self.controller.view.ask_user_password = Mock(side_effect=["12345678", "12345678"])
         self.controller.validate_password = Mock(return_value=False)
         self.controller.view.error = Mock()
+        self.controller.view.ask_pin = Mock(return_value="1234")
+        self.controller.validate_pin = Mock(return_value=True)
 
         c = Mock()
         result = self.controller.reset_password(c)
@@ -277,6 +293,8 @@ class TestAccountsController(unittest.TestCase):
         self.assertFalse(result)
         self.controller.validate_password.assert_called_once()
         self.controller.validate_password.assert_called_once_with("12345678", "12345678")
+        self.controller.view.ask_pin.assert_called_once()
+        self.controller.validate_pin.assert_called_once()
 
     def test_reset_password_database_updated(self):
         self.controller.view.ask_user_email = Mock(return_value="test@testing.com")
@@ -285,6 +303,8 @@ class TestAccountsController(unittest.TestCase):
         self.controller.validate_password = Mock(return_value=True)
         self.controller.model.update = Mock()
         self.controller.view.info = Mock()
+        self.controller.view.ask_pin = Mock(return_value="1234")
+        self.controller.validate_pin = Mock(return_value=True)
 
         c = Mock()
         self.controller.reset_password(c)
@@ -292,6 +312,8 @@ class TestAccountsController(unittest.TestCase):
         self.controller.model.update.assert_called_once()
         self.controller.model.update.assert_called_once_with(email="test@testing.com", new_values={"password": "12345678"})
         self.controller.view.info.assert_called_once()
+        self.controller.view.ask_pin.assert_called_once()
+        self.controller.validate_pin.assert_called_once()
 
     def test_validate_register_inputs(self):
         result = self.controller.validate_register_inputs(
