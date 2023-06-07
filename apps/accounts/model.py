@@ -1,9 +1,14 @@
+import logging
 from typing import Dict, Optional
-from apps.accounts.constants.database import DB_COLUMNS
 
+from apps.accounts.constants.database import DB_COLUMNS
 from apps.accounts.utils.password import Password
 from settings.database import DatabaseConnection
 from settings.settings import DATABASE_PATH
+from settings import logging_config
+
+
+logger = logging.getLogger(__name__)
 
 
 class Users:
@@ -20,7 +25,7 @@ class Users:
                 cursor = connection.cursor()
                 cursor.execute("INSERT INTO users(email, password) VALUES(?, ?)", (email, hashed_password))
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"User not created, error: {e}")
             return False
         return True
 
@@ -38,7 +43,7 @@ class Users:
                     query = f"UPDATE users SET {key} = ? WHERE user_id = ?"
                     cursor.execute(query, (value, user["user_id"]))
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"User not update, error: {e}")
             return False
         return True
 
@@ -50,6 +55,6 @@ class Users:
                 cursor.execute(query, (email,))
                 user = cursor.fetchone()
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"Error in getting user: {e}")
             return None
         return dict(user) if user else None

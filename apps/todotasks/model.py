@@ -1,7 +1,13 @@
+import logging
 from typing import Dict, List, Optional
+
 from settings.database import DatabaseConnection
 from settings.database.utils import dict_factory
 from settings.settings import DATABASE_PATH
+from settings import logging_config
+
+
+logger = logging.getLogger(__name__)
 
 
 class TodoModel:
@@ -16,7 +22,7 @@ class TodoModel:
                 cursor = connection.cursor()
                 cursor.execute("INSERT INTO tasks(task_name, user_id) VALUES(?, ?)", (new_task, user_id))
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"Task was not created, error: {e}")
             return False
         return True if cursor.rowcount >= 1 else False
 
@@ -26,7 +32,7 @@ class TodoModel:
                 cursor = connection.cursor()
                 cursor.execute("UPDATE tasks SET task_name = ? WHERE task_id = ? AND user_id = ?", (new_task, task_id, user_id))
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"Task was not updated, error: {e}")
             return False
         return True if cursor.rowcount >= 1 else False
 
@@ -43,7 +49,7 @@ class TodoModel:
                 cursor.execute(query, (user_id, ))
                 tasks = cursor.fetchall()
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"Could not retrieve all tasks, error: {e}")
             return None    
         return tasks if tasks else None
     
@@ -53,7 +59,7 @@ class TodoModel:
                 cursor = connection.cursor()
                 cursor.execute("DELETE FROM tasks WHERE task_id = ? AND user_id = ?", (task_id, user_id))
         except Exception as e:
-            # TODO: Add log
+            logger.error(f"Task was not deleted, error: {e}")
             return False
         return True if cursor.rowcount >= 1 else False
 

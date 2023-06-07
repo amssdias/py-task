@@ -140,6 +140,5 @@ class AccountsController:
                 self.view.info("Your account is now active.")
                 return True
             except Exception as e:
-                # TODO: Logs
                 self.view.error("Sorry something went wrong. Contact with admin.")
                 return False
